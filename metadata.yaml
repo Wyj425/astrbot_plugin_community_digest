@@ -1,0 +1,7 @@
+name: community_digest
+display_name: 社区精选分享
+desc: 从聊天和LivingMemory识别近期兴趣，结合固定标签共享检索、评分与推送。
+version: 0.5.0
+author: Wyj425
+repo: https://github.com/Wyj425/astrbot_plugin_community_digest
+astrbot_version: ">=4.29.3"

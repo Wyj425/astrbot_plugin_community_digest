@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env*
+data/
+private/
+*.db*
+credentials*.json
+cookies*.json
+*.pem
+*.log
+*.tgz

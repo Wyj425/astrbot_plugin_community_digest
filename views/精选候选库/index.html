@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>精选候选库</title>
+<style>
+:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#243342;background:#f4f6f8}body{margin:0;padding:28px;max-width:1260px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}h1{font-size:26px;margin:0 0 8px}h2{font-size:21px;margin-top:0}p{line-height:1.7;color:#5c6c7b}button,select,.button{font:inherit;background:white;color:#264b52;border:1px solid #cbd8da;border-radius:9px;padding:9px 14px;cursor:pointer;text-decoration:none}button:hover,.button:hover{background:#edf5f3}.actions{display:flex;gap:10px;flex-wrap:wrap}.panel{background:#fff;border:1px solid #e0e7eb;border-radius:14px;padding:22px;margin-top:20px}.muted{font-size:13px;color:#647581}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:6px 10px;background:#eef4f5;border-radius:7px;font-size:14px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:12px 10px;border-bottom:1px solid #edf0f3;text-align:left;vertical-align:top}th{color:#677887;font-weight:500}a{color:#176c77;text-decoration:none}a:hover{text-decoration:underline}.scroll{overflow:auto}.score{font-weight:700;font-size:18px;color:#16715d}.low{color:#89929b}.empty{padding:24px;color:#768492}#error{color:#aa3737}.history p{padding:12px 0;border-bottom:1px solid #eee;margin:0}.history small{display:block;color:#89939c}@media(max-width:700px){body{padding:16px}.panel{padding:16px}td:nth-child(4),th:nth-child(4){display:none}}
+</style></head><body>
+<header><div><h1>精选候选库</h1><div class="muted">群聊和私聊订阅共享标签，同标签只检索和评分一次；每个会话独立推送、去重。<br>修改标签及订阅：插件列表 → 社区精选分享 → 配置。</div></div><div class="actions"><button id="download">导出候选库</button><button id="refresh">刷新</button></div></header>
+<p id="summary">正在读取…</p><div id="error"></div><section id="tags" class="panel"></section><p><label for="groups">查看会话候选库：</label><select id="groups" aria-label="选择群聊或私聊"></select></p><main id="content"></main>
+<script type="module">
+let state=null;
+const q=id=>document.getElementById(id);
+const labels={pending:'等待执行',reserved:'处理中',missed:'已错过，不补发',accepted:'已提交发送',skipped:'无合格内容',failed:'执行失败',daily_limit:'达到日限额',card_only:'仅卡片已提交',uncertain:'发送状态不确定',card_accepted:'卡片已提交',duplicate:'已去重'};
+const date=s=>new Date(typeof s==='number'?s*1000:s).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false});
+function statusText(raw){let values={};try{values=JSON.parse(raw)}catch{return '读取状态未知'}if(values.state)return ({reused_existing_results:'已复用已有检索结果',started:'正在检索',rated:'已完成评分'})[values.state]||'已更新';return Object.entries(values).map(([k,v])=>k+' '+(String(v).startsWith('ok:')?'已读取 '+String(v).slice(3)+' 条':'读取失败')).join('；')}
+function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e}
+function render(){
+ const root=q('content');root.replaceChildren();const g=state.groups.find(x=>x.id===q('groups').value);if(!g)return;
+ const info=el('section',undefined,'panel');info.append(el('h2',(g.type==='private'?'私聊 · ':'群聊 · ')+g.name+' · '+g.target_id),el('p','订阅标签：'+g.keywords.join('、')+'　｜　'+g.min_score+' 分起推　｜　缓存 '+g.ttl+' 天'));
+ const chips=el('div',undefined,'chips');g.jobs.forEach(j=>chips.append(el('span',date(j.due)+' · '+(labels[j.state]||j.state),'chip')));info.append(chips);
+ if(g.searches?.length){g.searches.slice().sort((a,b)=>b.at-a.at).forEach(s=>info.append(el('p',s.tag+' · '+s.source+'：'+date(s.at)+'　'+statusText(s.status),'muted')))}
+ root.append(info);
+ const interest=el('section',undefined,'panel');interest.append(el('h2','近期兴趣'),el('p','结合本会话最近72小时真实聊天和长期记忆，每天最多分析一次；近期兴趣最多3个，默认3天有效，每天优先照顾一条。','muted'));
+ const interestData=g.interests||{};
+ interest.append(el('p','固定关注：'+(g.fixed_tags||[]).join('、')));
+ if(interestData.last_run)interest.append(el('p',date(interestData.last_run.at)+' · '+interestData.last_run.note,'muted'));
+ const statuses={active:'生效中',pinned:'已固定关注',blocked:'已禁用',deleted:'已删除',expired:'已过期',superseded:'已被更新主题替代'};
+ const topicRows=el('div',undefined,'history');
+ (interestData.topics||[]).forEach(t=>{const row=el('div');row.style.padding='12px 0';row.append(el('strong',t.name+' · '+(t.stance==='avoid'?'暂不想看':'关注')+' · '+(statuses[t.status]||t.status)),el('p',(t.reason||'')+'　｜　置信度 '+Math.round(t.confidence*100)+'%　｜　依据 '+t.evidence.length+' 条聊天、'+t.memory_ids.length+' 条记忆','muted'),el('p','最近讨论：'+date(t.last_seen)+'　｜　'+(t.status==='pinned'?'固定关注持续有效':'自动兴趣到期：'+date(t.expires)),'muted'));
+ const actions=el('div',undefined,'actions');const buttons=t.status==='active'?[['固定关注','pin'],['禁用','block'],['删除','delete']]:[['恢复','restore'],['禁用','block'],['删除','delete']];
+ buttons.forEach(([label,action])=>{const button=el('button',label);button.onclick=async()=>{try{button.disabled=true;await window.AstrBotPluginPage.apiPost('interests/manage',{target:g.id,tag:t.tag,action});await load()}catch(e){q('error').textContent='操作失败：'+e.message;button.disabled=false}};actions.append(button)});row.append(actions);topicRows.append(row)});
+ interest.append(topicRows);if(!interestData.enabled)interest.append(el('p','近期兴趣识别未开启。'));else if(!interestData.topics?.length)interest.append(el('p','暂未识别到有充分依据的近期兴趣，继续按固定标签选稿。'));root.append(interest);
+ const section=el('section',undefined,'panel');section.append(el('h2','候选评分'),el('p','相关性 40 ＋ 信息质量 25 ＋ 趣味性 20 ＋ 时效性 15。未发出的候选会保留到过期，之后自动清理。','muted'));
+ const wrap=el('div',undefined,'scroll'),table=el('table'),head=el('tr');['分数','平台与内容','状态','评分理由','过期时间'].forEach(x=>head.append(el('th',x)));table.append(head);
+ g.items.forEach(x=>{const row=el('tr');row.append(el('td',x.state==='待评分'?'待评分':String(x.score),x.score>=g.min_score?'score':'score low'));const title=el('td'),a=el('a',x.title);a.href=x.url;a.target='_blank';a.rel='noopener noreferrer';title.append(el('div',x.source+(x.tags?.length?' · '+x.tags.join('、'):'')+' · '+(x.selection_reason||''),'muted'),a);row.append(title,el('td',labels[x.state]||x.state),el('td',x.reason),el('td',date(x.expires)));table.append(row)});
+ wrap.append(table);section.append(wrap);if(!g.items.length)section.append(el('div','尚无候选。到推送时间且库存不足时会按关键词检索，不会为了填满次数而降低门槛。','empty'));root.append(section);
+ const history=el('section',undefined,'panel history');history.append(el('h2','最近推送记录'));g.history.forEach(x=>{const p=el('p',x.title||x.id);p.append(el('small',date(x.at)+' · '+(labels[x.state]||x.state)),el('span',x.comment||''));history.append(p)});if(!g.history.length)history.append(el('p','此会话暂无正式推送记录。每个群和私聊分别记录。'));root.append(history);
+}
+function renderTags(){const root=q('tags');root.replaceChildren(el('h2','共享标签库'),el('p','候选集中保存一份，各会话候选目录引用同一条内容。订阅者在各自推送时间消费，互不影响。','muted'));const wrap=el('div',undefined,'scroll'),table=el('table'),head=el('tr');['标签','轮换检索词','共享候选数','订阅会话'].forEach(x=>head.append(el('th',x)));table.append(head);(state.tags||[]).forEach(t=>{const row=el('tr');row.append(el('td',t.name),el('td',t.keywords.join('、')),el('td',String(t.candidates)),el('td',t.subscribers.map(s=>(s.type==='private'?'私聊 ':'群聊 ')+s.name).join('；')||'尚无订阅者'));table.append(row)});wrap.append(table);root.append(wrap)}
+async function load(){try{q('error').textContent='';const selected=q('groups').value;state=await window.AstrBotPluginPage.apiGet('overview');q('summary').textContent=(state.enabled?'推送已开启':'推送已暂停')+'　·　共享库存 '+state.shared_items+' 条　·　今日模型调用 '+state.usage.calls+' 次，输入 '+state.usage.input+' / 输出 '+state.usage.output+' tokens';q('groups').replaceChildren(...state.groups.map(g=>{const o=el('option',(g.type==='private'?'私聊 · ':'群聊 · ')+g.name+'（'+g.target_id+'）');o.value=g.id;return o}));if(state.groups.some(g=>g.id===selected))q('groups').value=selected;renderTags();render()}catch(e){q('error').textContent='读取失败：'+e.message}}
+q('groups').onchange=render;q('refresh').onclick=load;q('download').onclick=async()=>{try{await window.AstrBotPluginPage.download('report',{},'社区精选候选库.md');q('error').textContent=''}catch(e){q('error').textContent='导出失败：'+e.message}};load();
+</script></body></html>

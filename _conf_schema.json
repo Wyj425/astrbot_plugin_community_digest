@@ -1,0 +1,342 @@
+{
+  "enabled": {
+    "type": "bool",
+    "description": "启用群聊与私聊精选推送。每会话每时段一张卡片和一句短评。",
+    "default": false
+  },
+  "platform_id": {
+    "type": "string",
+    "description": "QQ平台ID。群聊默认参与，私聊只推送明确配置的订阅者。 首次安装请填写当前 AstrBot 中实际配置的接入或提供商 ID。",
+    "default": ""
+  },
+  "schedule_mode": {
+    "type": "string",
+    "description": "推送时间模式（北京时间）。随机时间每天按会话生成并持久化，重启不重抽、不补发已错过时段。",
+    "options": [
+      "随机时间",
+      "固定时间"
+    ],
+    "default": "随机时间"
+  },
+  "daily_count": {
+    "type": "int",
+    "description": "每会话每天最多几条内容，1至6。固定时间模式只取前N个时间。",
+    "default": 2
+  },
+  "random_start": {
+    "type": "string",
+    "description": "随机时间窗口起点，HH:MM。",
+    "default": "09:00"
+  },
+  "random_end": {
+    "type": "string",
+    "description": "随机时间窗口终点，不包含此时刻；可用24:00。",
+    "default": "24:00"
+  },
+  "min_gap_minutes": {
+    "type": "int",
+    "description": "同一个会话两次随机推送之间至少间隔多少分钟。",
+    "default": 90
+  },
+  "fixed_times": {
+    "type": "list",
+    "description": "固定时间列表，例如12:30、20:30。仅固定时间模式生效。",
+    "default": [
+      "12:30",
+      "20:30"
+    ]
+  },
+  "default_keywords": {
+    "type": "list",
+    "description": "旧版默认关键词，未填默认订阅标签时使用。建议使用默认订阅标签。",
+    "default": [
+      "Apex",
+      "英雄联盟",
+      "游戏趣事"
+    ]
+  },
+  "min_score": {
+    "type": "int",
+    "description": "推送最低分，0至100。相关性40＋信息质量25＋趣味性20＋时效性15。低于门槛就不推送。",
+    "default": 80
+  },
+  "selection_mode": {
+    "type": "string",
+    "description": "从所有可用平台的合格候选中只选一条，不会三平台各发一条。",
+    "options": [
+      "最高分",
+      "随机合格内容"
+    ],
+    "default": "最高分"
+  },
+  "cache_ttl_days": {
+    "type": "int",
+    "description": "候选缓存保留天数，1至30。从首次入库起算，重复检索不延长；到期自动删除。",
+    "default": 3
+  },
+  "published_max_age_days": {
+    "type": "int",
+    "description": "允许推送的内容发布年龄上限，1至90天。实际过期时间取发布有效期和缓存期限中较早者。未知发布时间会扣时效分。",
+    "default": 7
+  },
+  "refresh_cooldown_minutes": {
+    "type": "int",
+    "description": "同一标签、同一平台无合格库存时，两次检索至少间隔多少分钟。相同标签跨群聊和私聊共享冷却与候选。",
+    "default": 180
+  },
+  "keywords_per_refresh": {
+    "type": "int",
+    "description": "无合格库存时每轮选择几个订阅标签，1至3。每个标签的平台检索、评分供所有订阅者共享。",
+    "default": 2
+  },
+  "comment_mode": {
+    "type": "string",
+    "description": "卡片后的一句话。人设短评优先读字幕或正文；引用热门评论会标明来源，取不到短热评时使用人设短评。混合模式约30%优先引用。",
+    "options": [
+      "人设短评",
+      "引用热门评论",
+      "混合"
+    ],
+    "default": "人设短评"
+  },
+  "group_rules": {
+    "type": "template_list",
+    "description": "群聊订阅。按群选择共享标签、平台、频率、门槛及人设；未列出的群沿用全局。",
+    "default": [],
+    "templates": {
+      "group": {
+        "name": "QQ群推送规则",
+        "display_item": "group_name",
+        "hint": "群号填纯数字。空关键词/平台列表表示沿用全局，次数与最低分填0表示沿用全局。",
+        "items": {
+          "group_id": {
+            "type": "string",
+            "description": "QQ群号（纯数字）。",
+            "default": ""
+          },
+          "group_name": {
+            "type": "string",
+            "description": "群名称，方便识别。",
+            "default": ""
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "为此群开启推送。",
+            "default": true
+          },
+          "keywords": {
+            "type": "list",
+            "description": "兼容旧版关键词。订阅标签非空时以标签为准；未在标签库登记的词也会按同名共享标签处理。",
+            "default": []
+          },
+          "sources": {
+            "type": "list",
+            "description": "允许的平台：B站、小红书、小黑盒；空列表沿用所有已启用平台。",
+            "default": []
+          },
+          "daily_count": {
+            "type": "int",
+            "description": "此群每天最多几条（0沿用全局，其他1至6）。",
+            "default": 0
+          },
+          "min_score": {
+            "type": "int",
+            "description": "此群评分门槛（0沿用全局，其他1至100）。",
+            "default": 0
+          },
+          "persona_id": {
+            "type": "string",
+            "description": "短评人格ID；留空自动使用此群当前生效人格。",
+            "default": ""
+          },
+          "schedule_mode": {
+            "type": "string",
+            "description": "此群的时间模式。随机窗口与最小间隔沿用全局。",
+            "options": [
+              "跟随全局",
+              "随机时间",
+              "固定时间"
+            ],
+            "default": "跟随全局"
+          },
+          "fixed_times": {
+            "type": "list",
+            "description": "此群固定时间，空列表沿用全局。",
+            "default": []
+          },
+          "tags": {
+            "type": "list",
+            "description": "此群订阅的共享标签名称，例如英雄联盟、Apex；空列表兼容下方旧版关键词，再沿用默认标签。",
+            "default": []
+          }
+        }
+      }
+    }
+  },
+  "xhs_enabled": {
+    "type": "bool",
+    "description": "启用已登录的小红书关键词搜索及正文读取。",
+    "default": false
+  },
+  "heybox_enabled": {
+    "type": "bool",
+    "description": "启用已登录的小黑盒，按关键词匹配真实游戏分区，无匹配分区时筛选推荐流。",
+    "default": false
+  },
+  "source_in_title": {
+    "type": "bool",
+    "description": "签名前为小红书标题加【小红书】；B站继续用已验证的其他来源图文卡。",
+    "default": true
+  },
+  "provider_id": {
+    "type": "string",
+    "description": "评分和短评使用的模型提供商。每次检索批量评分一次，每次推送人设短评至多调用一次；命中缓存不重复评分。 首次安装请填写当前 AstrBot 中实际配置的接入或提供商 ID。",
+    "default": ""
+  },
+  "model_daily_call_limit": {
+    "type": "int",
+    "description": "本插件每天模型调用总上限，包括兴趣分析、候选评分及短评。达到上限时保持已有兴趣和缓存，短评用本地句子，不为未评分内容放行。",
+    "default": 12
+  },
+  "tag_library": {
+    "type": "template_list",
+    "description": "共享标签库。订阅者填写标签名称即可；同一标签的检索和评分全局复用。别名用于将 LOL、英雄联盟等写法归并到同一个标签。",
+    "default": [],
+    "templates": {
+      "tag": {
+        "name": "共享主题标签",
+        "display_item": "name",
+        "items": {
+          "name": {
+            "type": "string",
+            "description": "标签名称，例如英雄联盟；名称唯一。",
+            "default": ""
+          },
+          "search_keywords": {
+            "type": "list",
+            "description": "检索词，例如英雄联盟、LOL；多词按轮次轮换，不会每次都搜一遍。空列表使用标签名。",
+            "default": []
+          },
+          "aliases": {
+            "type": "list",
+            "description": "等价别名。订阅时填写这些别名会自动归并；不要给不同主题使用同一别名。",
+            "default": []
+          }
+        }
+      }
+    }
+  },
+  "default_tags": {
+    "type": "list",
+    "description": "没有单独配置的群、以及未填写标签的已订阅私聊使用这些标签。填写共享标签库中的名称。",
+    "default": [
+      "Apex",
+      "英雄联盟",
+      "游戏趣事"
+    ]
+  },
+  "private_rules": {
+    "type": "template_list",
+    "description": "私聊订阅。添加QQ号并选择标签；与群聊共享检索和候选，每个私聊独立计数、去重。不会自动给全部好友推送。",
+    "default": [],
+    "templates": {
+      "private": {
+        "name": "QQ私聊推送规则",
+        "display_item": "user_name",
+        "hint": "QQ号填纯数字。空标签沿用默认；时间、次数、门槛的继承规则与群聊一致。",
+        "items": {
+          "enabled": {
+            "type": "bool",
+            "description": "为此私聊开启定时推送。只有加入此列表并开启的私聊才会接收。",
+            "default": true
+          },
+          "keywords": {
+            "type": "list",
+            "description": "兼容旧版关键词。订阅标签非空时以标签为准；未在标签库登记的词也会按同名共享标签处理。",
+            "default": []
+          },
+          "sources": {
+            "type": "list",
+            "description": "允许的平台：B站、小红书、小黑盒；空列表沿用所有已启用平台。",
+            "default": []
+          },
+          "daily_count": {
+            "type": "int",
+            "description": "此私聊每天最多几条（0沿用全局，其他1至6）。",
+            "default": 0
+          },
+          "min_score": {
+            "type": "int",
+            "description": "此私聊评分门槛（0沿用全局，其他1至100）。",
+            "default": 0
+          },
+          "persona_id": {
+            "type": "string",
+            "description": "短评人格ID；留空自动使用此私聊当前生效人格。",
+            "default": ""
+          },
+          "schedule_mode": {
+            "type": "string",
+            "description": "此私聊的时间模式。随机窗口与最小间隔沿用全局。",
+            "options": [
+              "跟随全局",
+              "随机时间",
+              "固定时间"
+            ],
+            "default": "跟随全局"
+          },
+          "fixed_times": {
+            "type": "list",
+            "description": "此私聊固定时间，空列表沿用全局。",
+            "default": []
+          },
+          "tags": {
+            "type": "list",
+            "description": "此私聊订阅的共享标签名称，例如英雄联盟、Apex；空列表兼容下方旧版关键词，再沿用默认标签。",
+            "default": []
+          },
+          "user_id": {
+            "type": "string",
+            "description": "接收推送的QQ号（纯数字），请确认是机器人可私聊的好友。",
+            "default": ""
+          },
+          "user_name": {
+            "type": "string",
+            "description": "好友名称，方便识别；不填时读取QQ好友备注或昵称。",
+            "default": ""
+          }
+        }
+      }
+    }
+  },
+  "interest_enabled": {
+    "type": "bool",
+    "description": "结合本会话最近聊天与LivingMemory记忆识别近期兴趣，自动订阅共享标签。每天最多一条推送优先匹配近期兴趣；其他从固定兴趣选择，同主题每天最多一条。",
+    "default": false
+  },
+  "interest_window_hours": {
+    "type": "int",
+    "description": "分析最近多少小时的真实聊天，建议72；只读取当前群聊或私聊，排除机器人消息。",
+    "default": 72
+  },
+  "interest_ttl_days": {
+    "type": "int",
+    "description": "近期兴趣有效天数，默认3。从引用的最后一条真实讨论起算；没有新证据不会自动续期。每会话最多3个近期兴趣。",
+    "default": 3
+  },
+  "interest_daily_call_limit": {
+    "type": "int",
+    "description": "全插件每天最多几次兴趣分析调用，默认4。每会话每天最多1次；无新增聊天或消息不足时跳过。也受原有模型总调用上限限制，0表示暂停新分析。",
+    "default": 4
+  },
+  "interest_excluded_sender_ids": {
+    "type": "list",
+    "description": "额外排除的机器人QQ号。当前机器人会自动排除；如群里还有其他机器人，可在此填写QQ号。",
+    "default": []
+  },
+  "extended_reasoning_compat": {
+    "type": "bool",
+    "default": false,
+    "description": "部分OpenAI兼容网关需要额外的关闭推理字段；仅在服务支持时开启"
+  }
+}
