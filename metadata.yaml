@@ -5,3 +5,5 @@ version: 0.5.0
 author: Wyj425
 repo: https://github.com/Wyj425/astrbot_plugin_community_digest
 astrbot_version: ">=4.29.3"
+support_platforms:
+  - aiocqhttp
