@@ -1,7 +1,7 @@
 name: community_digest
 display_name: 社区精选分享
 desc: 让 AI 机器人按群友和好友的兴趣，定时分享 B站、小红书和小黑盒的精选内容，并附一句短评。
-version: 0.5.1
+version: 0.5.2
 author: Wyj425
 repo: https://github.com/Wyj425/astrbot_plugin_community_digest
 astrbot_version: ">=4.29.3"

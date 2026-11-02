@@ -20,7 +20,7 @@ from .interests import Interests
 from .share_context import ShareContextMixin
 
 
-@register('community_digest', 'Wyj425', '结合聊天和长期记忆识别近期兴趣，共享候选并按会话推送', '0.5.1')
+@register('community_digest', 'Wyj425', '结合聊天和长期记忆识别近期兴趣，共享候选并按会话推送', '0.5.2')
 class CommunityDigest(ShareContextMixin, Star):
     def __init__(self, context: Context, config):
         super().__init__(context)

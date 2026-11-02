@@ -4,7 +4,7 @@
 
 你可以给不同的群和私聊设置不同主题，例如游戏群看 Apex、朋友私聊看英雄联盟。相同主题的搜索结果可以复用，每个会话分别记录发过什么。
 
-<img src="logo.png" width="120" alt="社区精选分享插件图标">
+<img src="https://raw.githubusercontent.com/Wyj425/astrbot_plugin_community_digest/main/logo.png" width="120" alt="社区精选分享插件图标">
 
 ## 能做什么
 
@@ -103,7 +103,7 @@ QQ卡片签名插件。按各自 README 安装缺少的插件或读取服务。
 | `model_daily_call_limit` | 每天全插件模型调用上限 | 12 |
 | `interest_enabled` | 从聊天中分析近期兴趣 | 先关闭 |
 
-固定时间模式下，在 `fixed_times` 填写如“12:30”“20:30”，每天最多执行 `daily_count` 次。群聊、私聊可以单独覆盖部分设置。完整字段见 [配置说明](docs/CONFIGURATION.md)。
+固定时间模式下，在 `fixed_times` 填写如“12:30”“20:30”，每天最多执行 `daily_count` 次。群聊、私聊可以单独覆盖部分设置。完整字段见 [配置说明](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/docs/CONFIGURATION.md)。
 
 ## 如何筛选内容
 
@@ -155,12 +155,12 @@ QQ卡片签名插件。按各自 README 安装缺少的插件或读取服务。
 
 ## 开发资料
 
-- [配置说明](docs/CONFIGURATION.md)
-- [接口说明](docs/API.md)
-- [更新记录](CHANGELOG.md)
-- [发布检查](docs/RELEASING.md)
+- [配置说明](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/docs/CONFIGURATION.md)
+- [接口说明](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/docs/API.md)
+- [更新记录](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/CHANGELOG.md)
+- [发布检查](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/docs/RELEASING.md)
 
-本插件采用 [MIT 许可证](LICENSE)。
+本插件采用 [MIT 许可证](https://github.com/Wyj425/astrbot_plugin_community_digest/blob/main/LICENSE)。
 
 
 ## 分享后的追问
