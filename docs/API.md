@@ -22,3 +22,8 @@ detail = await provider.read(items[0]["url"], images=False)
 依赖缺失/停用/接口版本不匹配会抛出 RuntimeError；远端失败有超时、并发上限和短暂失败冷却。业务插件不得把签名/发送不确定状态自动当作可重试，否则可能重复发送。
 
 管理端接口通过 AstrBot 已认证插件 API：`status` GET、`login` POST、`verify` POST、`inspect` POST（参数 url/images，仅解析，不向QQ发送）。QQ卡片插件仅有 status。管理员登录入口不是模型工具。
+
+
+## 会话分享上下文 v1
+
+通过 `context.get_registered_star("community_digest")` 获取当前已启用实例，检查 `sharing_context_version == 1`。`shared_content_context(umo, before=None, message_id=None, limit=8)` 仅返回该完整会话在截止时间前实际送达的分享（平台、标题、链接、机器人转发标记、卡片与短评消息 ID、时间）；`shared_content_evidence(umo, card_id, before=None)` 仅返回同一会话对应已送达卡片的正文快照。接口不发送消息、不触发模型、不包含图片二进制，也不暴露其他会话。

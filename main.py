@@ -2,11 +2,13 @@ import asyncio
 import json
 import random
 import time
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from astrbot.api import logger
 from astrbot.api.star import Context, Star, register
+from astrbot.api.event import filter
 
 from .planning import Store, TZ, clean, profile, report_url
 from .sources import Reader, valid
@@ -15,16 +17,18 @@ from .editorial import Editor
 from .cards import build_card, send_card
 from .subscriptions import library, tag_profile, search_key, target_umo
 from .interests import Interests
+from .share_context import ShareContextMixin
 
 
-@register('community_digest', 'Wyj425', '结合聊天和长期记忆识别近期兴趣，共享候选并按会话推送', '0.5.0')
-class CommunityDigest(Star):
+@register('community_digest', 'Wyj425', '结合聊天和长期记忆识别近期兴趣，共享候选并按会话推送', '0.5.1')
+class CommunityDigest(ShareContextMixin, Star):
     def __init__(self, context: Context, config):
         super().__init__(context)
         self.config=config
         self.root=Path('data/plugin_data/community_digest')
         self.root.mkdir(parents=True,exist_ok=True)
         self.store=Store(self.root/'digest.db')
+        self.initialize_share_context()
         (self.root/'digest.db').chmod(0o600)
         self.reader=Reader(self.root,config,context)
         self.editor=Editor(context,config,self.store)
@@ -48,6 +52,10 @@ class CommunityDigest(Star):
         self.context.register_web_api('/community_digest/interests/manage',self.web_manage_interest,['POST'],'管理近期兴趣')
         self.task=asyncio.create_task(self.loop())
         self.interest_task=asyncio.create_task(self.interest_loop())
+
+    @filter.on_llm_request(priority=sys.maxsize-9)
+    async def share_context(self, event, req):
+        await self.attach_shared_content_context(event, req)
 
     async def terminate(self):
         for task in [self.task,self.interest_task]:
@@ -269,10 +277,13 @@ class CommunityDigest(Star):
             nonlocal card_id
             card_id=mid
             self.store.update_delivery(gid,item['id'],'card_accepted',mid,comment=text)
+            self.record_shared_content(target_umo(self.config,p),enriched,mid)
         try:
             card_id,comment_id=await self.send_bundle(
                 target_umo(self.config,p),card,text,on_card)
             self.store.update_delivery(gid,item['id'],'accepted',card_id,comment_id,text)
+            self.record_shared_content(target_umo(self.config,p),enriched,card_id,comment_id,text)
+            await self.sync_shared_history(target_umo(self.config,p),enriched,card_id,comment_id,text)
             self.store.finish(job,'accepted',item['id'],json.dumps({'score':item['score'],'source':item['source']},ensure_ascii=False))
             logger.info('[community_digest] pushed group=%s source=%s id=%s score=%s card_id=%s comment_id=%s',
                 gid,item['source'],item['id'],item['score'],card_id,comment_id)
@@ -286,7 +297,7 @@ class CommunityDigest(Star):
             {k:p[k] for k in ['group_id','group_name','keywords','sources','mode','count','min_score','ttl_days']}
             for p in self.profiles], 'updated':datetime.now(TZ).isoformat(),
             'targets':[dict(id=p['target_id'],type=p['target_type'],name=p['group_name'],tags=p['keywords']) for p in self.profiles],
-            'report':'候选库.md','version':'0.5.0'}
+            'report':'候选库.md','version':'0.5.1'}
         path=self.root/'status.json'
         path.write_text(json.dumps(data,ensure_ascii=False,indent=2));path.chmod(0o600)
 
